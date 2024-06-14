@@ -1,0 +1,50 @@
+#include "internal.h"
+
+void csvpack_table_teardown_rows(csvpack_table_t *tbl) {
+  if (!tbl) return;
+  for (size_t i = 0; i < tbl->count; i++) {
+    csvpack_row_release_heap(&tbl->rows[i]);
+  }
+}
+
+void csvpack_table_destroy(csvpack_table_t *tbl) {
+  if (!tbl) return;
+  free(tbl->rows);
+  csvpack_arena_free(&tbl->arena);
+  free(tbl->source_path);
+  free(tbl);
+}
+
+const csvpack_row_t *csvpack_table_row(const csvpack_table_t *tbl, size_t index) {
+  if (!tbl || index >= tbl->count) return NULL;
+  return &tbl->rows[index];
+}
+
+const char *csvpack_cell_at(const csvpack_table_t *tbl, size_t row, size_t col,
+                            const char *fallback) {
+  if (!tbl || row >= tbl->count) return fallback;
+  const csvpack_row_t *r = &tbl->rows[row];
+  if (col >= r->count) return fallback;
+  return r->cells[col].value.data;
+}
+
+const char *csvpack_cell_by_column(const csvpack_table_t *tbl, size_t row,
+                                   const char *column, const char *fallback) {
+  if (!tbl || !column || tbl->count == 0) return fallback;
+  const csvpack_row_t *header = &tbl->rows[0];
+  for (size_t i = 0; i < header->count; i++) {
+    if (strcmp(header->cells[i].value.data, column) == 0) {
+      return csvpack_cell_at(tbl, row, i, fallback);
+    }
+  }
+  return fallback;
+}
+
+int csvpack_get_int(const csvpack_table_t *tbl, size_t row, const char *column,
+                    int fallback) {
+  const char *v = csvpack_cell_by_column(tbl, row, column, NULL);
+  if (!v) return fallback;
+  int out = 0;
+  if (!csvpack_parse_int(v, strlen(v), &out)) return fallback;
+  return out;
+}
