@@ -1,3 +1,39 @@
+# Build artifacts
 *.o
 *.a
+*.so
+*.exe
+*.dll
+*.dylib
+*_harness.o
+libcsvpack.a
+test_runner
+simple_parse
+*_fuzzer.o
+*_poc_driver
+*_poc_driver.c
+
+# Local / WSL output
 /tmp/
+csvpack_out/
+
+# IDE and OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Patch backups
+*.patch.bak
+*.orig
+*.rej
+
+# Bounty workflow — keep local, do not push to submission repo
+poc/
+guides/
+build/wsl_test_pocs.sh
+tools/*_poc_driver.c
+tools/gen_pocs.py
+README.public.md
