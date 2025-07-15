@@ -3,7 +3,7 @@
 CSV table parser library with dialect profiles, row filters, column transforms,
 statistics helpers, UTF-8 encoding, and pivot utilities.
 
-Run `make test` after building.
+Install with `make && make test`.
 
 ## Build
 
