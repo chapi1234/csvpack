@@ -1,5 +1,5 @@
-k,v
-base,1
+ticket,status,priority
+42,open,low
 ---PATCH---
-k,v,extra
-overlay,2,3
+ticket,status,priority,assignee
+42,closed,high,devon
