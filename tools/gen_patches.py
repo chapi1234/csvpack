@@ -45,7 +45,7 @@ FIXES: list[tuple[str, list[tuple[str, str, str]]]] = [
             (
                 "src/row.c",
                 """  if (tbl->has_header && row != &tbl->rows[0] &&
-      row->count < tbl->rows[0].count) {
+      row->count < tbl->rows[0].count && tbl->rows[0].count <= 16) {
     size_t bound = tbl->rows[0].count;
     for (size_t i = 0; i < bound; i++) {
       if (i >= row->count) {
