@@ -1,8 +1,11 @@
-homepage: "https://github.com/example/csvpack"
 language: c++
-main_repo: "https://github.com/example/csvpack.git"
+main_repo: '.'
+fuzzing_engines:
+  - libfuzzer
 sanitizers:
   - address
+architectures:
+  - x86_64
 fuzz_targets:
   - parse_fuzzer
   - chunk_fuzzer
