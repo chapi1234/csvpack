@@ -34,9 +34,9 @@ POCS = {
         '@chunk "open\n'
     ),
     "wide_arena_rotate.csv": (
-        ",".join(f"h{i}" for i in range(520))
+        ",".join(f"h{i}" for i in range(256))
         + "\n"
-        + ",".join("x" for _ in range(520))
+        + ",".join("xxxxxxx" for _ in range(256))
         + "\n"
     ),
     "diff_many_rows.csv": (
