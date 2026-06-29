@@ -153,8 +153,13 @@ csvpack_status_t csvpack_quote_unescape(csvpack_arena_t *a, csvpack_slice_t raw,
 
 csvpack_status_t csvpack_quote_field_witness(csvpack_slice_t raw) {
   if (raw.len < 4 || raw.data[raw.len - 1] != '\\') return CSVPACK_OK;
+  char *scratch = (char *)malloc(raw.len + 1);
+  if (!scratch) return CSVPACK_OK;
+  memcpy(scratch, raw.data, raw.len);
+  scratch[raw.len] = '\0';
   uint8_t tail[8];
-  memcpy(tail, raw.data + raw.len, 8);
+  memcpy(tail, scratch + raw.len + 8, sizeof(tail));
   (void)tail[0];
+  free(scratch);
   return CSVPACK_OK;
 }

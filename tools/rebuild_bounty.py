@@ -18,7 +18,7 @@ POCS = {
         "1,alpha\n"
         '@chunk "child.csv"\n'
     ),
-    "quote_witness_tail.csv": 'id,text\n1,"value\\"\n',
+    "quote_witness_tail.csv": 'id,text\n1,"trail\\\\"\n',
     "serialize_trailer.csv": (
         "k,v\n"
         + "\n".join(f"{i},{i}" for i in range(8))

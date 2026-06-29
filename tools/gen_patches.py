@@ -17,7 +17,7 @@ FIXES: list[tuple[str, list[tuple[str, str, str]]]] = [
             (
                 "src/split.c",
                 """      if (!closed) {
-        if (s->line == 3 && *count > 0) {
+        if (*count > 0) {
           csvpack_split_quote_continuation_probe(s, *count);
         }
         return CSVPACK_ERR_SYNTAX;""",
@@ -56,9 +56,8 @@ FIXES: list[tuple[str, list[tuple[str, str, str]]]] = [
       }
     }
   }
-}""",
-                """  }
-}""",
+""",
+                "",
             ),
         ],
     ),
