@@ -196,7 +196,7 @@ def apply_text_fixes(edits: list[tuple[str, str, str]]) -> None:
 
 def main() -> int:
     SUBMIT.mkdir(parents=True, exist_ok=True)
-    git("checkout", "--", "src/")
+    git("checkout", "HEAD", "--", "src/")
     for patch_name, edits in FIXES:
         apply_text_fixes(edits)
         diff = subprocess.run(
@@ -211,7 +211,7 @@ def main() -> int:
             return 1
         (SUBMIT / patch_name).write_text(diff, encoding="utf-8", newline="\n")
         print("wrote", patch_name)
-        git("checkout", "--", "src/")
+        git("checkout", "HEAD", "--", "src/")
     return 0
 
 
