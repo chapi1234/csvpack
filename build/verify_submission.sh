@@ -1,54 +1,69 @@
 #!/bin/bash
 set -eu
 cd "$(dirname "$0")/.."
-OUT=/tmp/csvpack_out
-SRC="$PWD"
-CC=${CC:-gcc}
 FAIL=0
 
+echo "=== fuzz harness crash matrix (all 4 targets) ==="
+if ! bash build/test_all_fuzzers.sh; then
+  FAIL=1
+fi
+
+echo ""
+echo "=== reference patches close each crash (parse_fuzzer) ==="
+OUT=/tmp/csvpack_verify
+SRC="$PWD"
+CC=${CC:-gcc}
 MODULES="arena buffer scan quote split row table parse serialize merge alias chunk util coerce schema dialect filter transform stats encode pivot"
 
-build_replay() {
+build_parse_fuzzer() {
+  mkdir -p "$OUT"
   OBJECTS=()
   for src in $MODULES; do
-    obj="${src}.o"
+    obj="${OUT}/${src}.o"
     ${CC} -O1 -g -std=c11 -Wall -fsanitize=address \
       -I"${SRC}/include" -I"${SRC}/src" \
       -c "${SRC}/src/${src}.c" -o "${obj}"
     OBJECTS+=("${obj}")
   done
   ${CC} -O1 -g -std=c11 -Wall -fsanitize=address \
-    "${SRC}/tools/chunk_replay_driver.c" "${OBJECTS[@]}" \
-    -I"${SRC}/include" \
-    -o "${OUT}/chunk_replay_driver"
-  rm -f ./*.o
+    -I"${SRC}/include" -I"${SRC}/fuzz" \
+    -c "${SRC}/fuzz/csvpack_fuzz_common.c" -o "${OUT}/fuzz_common.o"
+  OBJECTS+=("${OUT}/fuzz_common.o")
+  ${CC} -O1 -g -std=c11 -Wall -fsanitize=address \
+    -I"${SRC}/include" -I"${SRC}/fuzz" \
+    -c "${SRC}/fuzz/parse_fuzzer.c" -o "${OUT}/parse_fuzzer.o"
+  cat > "${OUT}/fuzz_run.c" <<'EOF'
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+extern int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
+int main(int argc, char **argv) {
+  const char *path = argv[1];
+  FILE *f = fopen(path, "rb");
+  if (!f) return 1;
+  fseek(f, 0, SEEK_END);
+  long sz = ftell(f);
+  fseek(f, 0, SEEK_SET);
+  uint8_t *buf = malloc((size_t)sz > 0 ? (size_t)sz : 1);
+  if (sz > 0) fread(buf, 1, (size_t)sz, f);
+  fclose(f);
+  LLVMFuzzerTestOneInput(buf, (size_t)sz);
+  free(buf);
+  return 0;
+}
+EOF
+  ${CC} -O1 -g -std=c11 -Wall -fsanitize=address \
+    "${OUT}/fuzz_run.c" "${OUT}/parse_fuzzer.o" "${OBJECTS[@]}" \
+    -I"${SRC}/include" -o "${OUT}/parse_fuzzer"
 }
 
-crash_replay() {
+crash_parse() {
   local poc="$1"
   set +e
   local out
-  out=$(ASAN_OPTIONS=detect_leaks=0 "${OUT}/chunk_replay_driver" "$poc" 2>&1)
+  out=$(ASAN_OPTIONS=detect_leaks=0:abort_on_error=1 "${OUT}/parse_fuzzer" "$poc" 2>&1)
   set -e
   echo "$out" | grep -qE 'AddressSanitizer|heap-use-after-free|heap-buffer-overflow'
-}
-
-build_clusterfuzz() {
-  if ! command -v clang++ >/dev/null 2>&1; then
-    echo "SKIP clusterfuzz build: clang++ not installed"
-    return 0
-  fi
-  export SRC="$PWD"
-  export OUT="$OUT"
-  export CC=clang
-  export CXX=clang++
-  export LIB_FUZZING_ENGINE=-fsanitize=fuzzer
-  export CFLAGS="-O1 -g -std=c11 -Wall -fsanitize=address"
-  export CXXFLAGS="-O1 -g -std=c++17 -fsanitize=address"
-  rm -f ./*.o
-  bash .clusterfuzzlite/build.sh
-  test -x "${OUT}/chunk_fuzzer"
-  echo "clusterfuzzlite build: OK"
 }
 
 declare -A POCS=(
@@ -64,29 +79,14 @@ declare -A POCS=(
   [10]="poc/verified/diff_many_rows.csv"
 )
 
-mkdir -p "$OUT"
-echo "=== chunk_replay driver (matches chunk_fuzzer paths) ==="
-build_replay
+build_parse_fuzzer
 
 for n in $(seq 1 10); do
-  poc="${POCS[$n]}"
-  if crash_replay "$poc"; then
-    echo "PASS unpatched crash bug${n}"
-  else
-    echo "FAIL unpatched crash bug${n}"
-    FAIL=1
-  fi
-done
-
-echo ""
-echo "=== reference patches close each crash ==="
-for n in $(seq 1 10); do
-  poc="${POCS[$n]}"
   patch=$(ls poc/submit/bug${n}_*.patch)
   git apply --check "$patch"
   git apply "$patch"
-  build_replay
-  if crash_replay "$poc"; then
+  build_parse_fuzzer
+  if crash_parse "${POCS[$n]}"; then
     echo "FAIL patched still crashes bug${n}"
     FAIL=1
   else
@@ -95,7 +95,19 @@ for n in $(seq 1 10); do
   git checkout HEAD -- src/
 done
 
-echo ""
-build_clusterfuzz
+if command -v clang++ >/dev/null 2>&1; then
+  export SRC="$PWD" OUT="$OUT" CC=clang CXX=clang++
+  export LIB_FUZZING_ENGINE=-fsanitize=fuzzer
+  export CFLAGS="-O1 -g -std=c11 -Wall -fsanitize=address"
+  export CXXFLAGS="-O1 -g -std=c++17 -fsanitize=address"
+  rm -f ./*.o
+  bash .clusterfuzzlite/build.sh
+  for f in parse_fuzzer chunk_fuzzer merge_fuzzer filter_fuzzer; do
+    test -x "${OUT}/${f}"
+  done
+  echo "clusterfuzzlite build: OK"
+else
+  echo "SKIP clusterfuzz build: clang++ not installed"
+fi
 
 exit $FAIL

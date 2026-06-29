@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Regenerate PoC files and local drivers list for the 10-bug csvpack bounty."""
+"""Regenerate CSV fixtures and fuzz corpus seeds."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VER = ROOT / "poc" / "verified"
+CORPUS = ROOT / "fuzz" / "corpus"
+FUZZERS = ("parse_fuzzer", "chunk_fuzzer", "merge_fuzzer", "filter_fuzzer")
 
 POCS = {
     "quoted_continuation_row2.csv": (
@@ -49,18 +51,20 @@ POCS = {
     ),
 }
 
-DRIVERS = [
-    ("split_poc", "quoted_continuation_row2.csv", "crash"),
-    ("parse_poc", "multi_record_gap.csv", "crash"),
-    ("row_poc", "narrow_row_wide_header.csv", "crash"),
-    ("chunk_poc", "chunk_include_carry.csv", "crash"),
-    ("quote_poc", "quote_witness_tail.csv", "crash"),
-    ("serialize_poc", "serialize_trailer.csv", "crash"),
-    ("query_poc", "query_long_value.csv", "crash"),
-    ("chunk_directive_poc", "chunk_directive_tail.csv", "crash"),
-    ("arena_poc", "wide_arena_rotate.csv", "crash"),
-    ("diff_poc", "diff_many_rows.csv", "crash"),
-]
+
+def write_corpus() -> None:
+    for fuzzer in FUZZERS:
+        dest = CORPUS / fuzzer
+        dest.mkdir(parents=True, exist_ok=True)
+        for stale in dest.iterdir():
+            if stale.is_file() and stale.name.startswith("seed_"):
+                stale.unlink()
+        for name, content in POCS.items():
+            path = dest / f"seed_{name}"
+            if isinstance(content, bytes):
+                path.write_bytes(content)
+            else:
+                path.write_text(content, encoding="utf-8", newline="\n")
 
 
 def main() -> None:
@@ -74,7 +78,9 @@ def main() -> None:
     for stale in VER.iterdir():
         if stale.is_file() and stale.name not in POCS:
             stale.unlink()
+    write_corpus()
     print("wrote", len(POCS), "PoCs to", VER)
+    print("wrote corpus seeds under", CORPUS)
 
 
 if __name__ == "__main__":

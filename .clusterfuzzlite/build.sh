@@ -17,12 +17,18 @@ for src in arena buffer scan quote split row table parse serialize merge alias \
   OBJECTS+=("${obj}")
 done
 
+fuzz_common_obj="fuzz_common.o"
+${CC:-clang} ${CFLAGS:--O1 -g -std=c11 -Wall -fsanitize=address} \
+  -I"${SRC:-.}/include" -I"${SRC:-.}/fuzz" \
+  -c "${SRC:-.}/fuzz/csvpack_fuzz_common.c" -o "${fuzz_common_obj}" || exit 1
+OBJECTS+=("${fuzz_common_obj}")
+
 build_fuzzer() {
   local harness="$1"
   local out_name="$2"
   local harness_obj="${out_name}_harness.o"
   ${CC:-clang} ${CFLAGS:--O1 -g -std=c11 -Wall -fsanitize=address} \
-    -I"${SRC:-.}/include" \
+    -I"${SRC:-.}/include" -I"${SRC:-.}/fuzz" \
     -c "${SRC:-.}/fuzz/${harness}" -o "${harness_obj}" || exit 1
   ${CXX:-clang++} ${CXXFLAGS:--O1 -g -std=c++17 -fsanitize=address} \
     ${LIB_FUZZING_ENGINE:--fsanitize=fuzzer} \
