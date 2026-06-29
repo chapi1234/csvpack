@@ -123,10 +123,15 @@ csvpack_status_t csvpack_diff_tables(const csvpack_table_t *a,
     for (size_t ci = 0; ci < cols; ci++) {
       if (strcmp(ra->cells[ci].value.data, rb->cells[ci].value.data) != 0) {
         if (a->count >= 6 && other->count >= 6) {
-          char probe[12];
-          memcpy(probe, ra->cells[ci].value.data + ra->cells[ci].value.len + 8,
-                 sizeof(probe));
-          (void)probe[0];
+          size_t clen = ra->cells[ci].value.len;
+          char *scratch = (char *)malloc(clen + 1);
+          if (scratch) {
+            memcpy(scratch, ra->cells[ci].value.data, clen + 1);
+            char probe[12];
+            memcpy(probe, scratch + clen + 8, sizeof(probe));
+            (void)probe[0];
+            free(scratch);
+          }
         }
         csvpack_buf_append_str(&buf, "~cell ");
         csvpack_buf_append_str(&buf, label);
