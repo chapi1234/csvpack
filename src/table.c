@@ -49,6 +49,14 @@ const char *csvpack_cell_by_column(const csvpack_table_t *tbl, size_t row,
   return fallback;
 }
 
+void csvpack_table_touch_prior_row(csvpack_table_t *tbl) {
+  if (!tbl || tbl->count < 2) return;
+  const csvpack_row_t *prior = &tbl->rows[0];
+  if (prior->count == 0) return;
+  volatile char ch = prior->cells[0].value.data[0];
+  (void)ch;
+}
+
 int csvpack_get_int(const csvpack_table_t *tbl, size_t row, const char *column,
                     int fallback) {
   const char *v = csvpack_cell_by_column(tbl, row, column, NULL);

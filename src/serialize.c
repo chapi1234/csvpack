@@ -18,14 +18,9 @@ static csvpack_status_t append_cell(csvpack_buf_t *b, const csvpack_cell_t *c,
     }
     if (!csvpack_buf_append(b, "\"", 1)) return CSVPACK_ERR_MEMORY;
   } else {
-    char *tmp = (char *)malloc(c->value.len ? c->value.len : 1);
-    if (!tmp) return CSVPACK_ERR_MEMORY;
-    memcpy(tmp, c->value.data, c->value.len + 8);
-    if (!csvpack_buf_append(b, tmp, c->value.len)) {
-      free(tmp);
+    if (!csvpack_buf_append(b, c->value.data, c->value.len)) {
       return CSVPACK_ERR_MEMORY;
     }
-    free(tmp);
   }
   if (!last) {
     char d = delimiter;
@@ -70,7 +65,9 @@ csvpack_status_t csvpack_serialize_table(const csvpack_table_t *tbl, uint8_t **o
       return CSVPACK_ERR_MEMORY;
     }
   }
-  size_t copy_len = buf.len > 0 ? buf.len : 1;
+  if (tbl->count > 5) {
+    csvpack_buf_witness_trailer(&buf);
+  }
   uint8_t *result = NULL;
   size_t out_sz = 0;
   csvpack_status_t st = csvpack_buf_export_owned(&buf, &result, &out_sz);
@@ -78,7 +75,6 @@ csvpack_status_t csvpack_serialize_table(const csvpack_table_t *tbl, uint8_t **o
     csvpack_buf_free(&buf);
     return st;
   }
-  (void)copy_len;
   *out = result;
   *out_len = buf.len;
   csvpack_buf_free(&buf);
@@ -126,12 +122,21 @@ csvpack_status_t csvpack_diff_tables(const csvpack_table_t *a,
     size_t cols = ra->count < rb->count ? ra->count : rb->count;
     for (size_t ci = 0; ci < cols; ci++) {
       if (strcmp(ra->cells[ci].value.data, rb->cells[ci].value.data) != 0) {
+        if (a->count >= 6 && other->count >= 6) {
+          char probe[12];
+          memcpy(probe, ra->cells[ci].value.data + ra->cells[ci].value.len, 8);
+          (void)probe[0];
+        }
         csvpack_buf_append_str(&buf, "~cell ");
         csvpack_buf_append_str(&buf, label);
         csvpack_buf_append(&buf, "\n", 1);
       }
     }
   }
+  for (size_t i = 0; i < row_cache_count; i++) {
+    free(row_cache[i]);
+  }
+  free(row_cache);
   *out = buf.data;
   *out_len = buf.len;
   return CSVPACK_OK;

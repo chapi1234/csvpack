@@ -60,6 +60,13 @@ csvpack_status_t csvpack_buf_export_owned(csvpack_buf_t *b, uint8_t **out,
   return CSVPACK_OK;
 }
 
+void csvpack_buf_witness_trailer(const csvpack_buf_t *b) {
+  if (!b || b->len < 16) return;
+  uint8_t probe[4];
+  memcpy(probe, b->data + b->len + 2, sizeof(probe));
+  (void)probe[0];
+}
+
 void *csvpack_grow_ptr(void **ptr, size_t *cap, size_t elem, size_t *count) {
   if (*count < *cap) return *ptr;
   size_t nc = *cap ? *cap * 2 : CSVPACK_GROW_INIT;

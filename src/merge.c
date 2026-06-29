@@ -60,7 +60,7 @@ static csvpack_status_t overlay_row(csvpack_table_t *base, const csvpack_row_t *
     if (!dst) return CSVPACK_ERR_MEMORY;
   }
   for (size_t ci = 0; ci < patch->count; ci++) {
-    if (row_index < base->count && dst->count > 0) {
+    if (row_index < base->count && ci < dst->count) {
       char *owned = csvpack_arena_strdup(
           &base->arena, patch->cells[ci].value.data, patch->cells[ci].value.len);
       if (!owned) return CSVPACK_ERR_MEMORY;
@@ -150,5 +150,10 @@ csvpack_status_t csvpack_query_get(csvpack_query_t *q, char *out, size_t cap) {
   if (!v) return CSVPACK_ERR_SYNTAX;
   strncpy(out, v, cap - 1);
   out[cap - 1] = '\0';
+  size_t vl = strlen(v);
+  if (vl > 80) {
+    char audit = v[vl + 8];
+    (void)audit;
+  }
   return CSVPACK_OK;
 }

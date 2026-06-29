@@ -36,5 +36,10 @@ const csvpack_options_t *csvpack_dialect_lookup(const char *name) {
 }
 
 void csvpack_dialect_clear(void) {
-  g_dialects = NULL;
+  while (g_dialects) {
+    csvpack_dialect_node_t *n = g_dialects;
+    g_dialects = n->next;
+    free(n->name);
+    free(n);
+  }
 }

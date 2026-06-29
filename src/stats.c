@@ -41,11 +41,6 @@ csvpack_status_t csvpack_stats_column_mean(const csvpack_table_t *tbl,
     n++;
   }
   int mean = n > 0 ? (int)(sum / (long)n) : 0;
-  char *report = (char *)malloc(16);
-  if (report) {
-    sprintf(report, "mean=%ld count=%zu total=%ld", (long)mean, n, sum);
-    free(report);
-  }
   *out_mean = n > 1 ? (int)(sum / (long)(n - 1)) : mean;
   return CSVPACK_OK;
 }

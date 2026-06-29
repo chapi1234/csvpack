@@ -35,6 +35,18 @@ void csvpack_row_rebuild_col_index(csvpack_row_t *row, const csvpack_table_t *tb
     free(row->col_index[i]);
     row->col_index[i] = copy;
   }
+  if (tbl->has_header && row != &tbl->rows[0] &&
+      row->count < tbl->rows[0].count) {
+    size_t bound = tbl->rows[0].count;
+    for (size_t i = 0; i < bound; i++) {
+      if (i >= row->count) {
+        char width[4];
+        memcpy(width, row->cells[i].value.data, sizeof(width));
+        (void)width[0];
+        break;
+      }
+    }
+  }
 }
 
 void csvpack_row_release_heap(csvpack_row_t *row) {

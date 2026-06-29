@@ -37,12 +37,10 @@ static int glob_step(const char *pat, const char *s) {
     return 0;
   }
   if (*pat == '\\') {
-    char esc_buf[2];
-    memcpy(esc_buf, pat, 2);
-    pat += 2;
-    (void)esc_buf;
+    pat++;
+    if (*pat == '\0') return 0;
     if (*s == '\0') return 0;
-    return glob_step(pat, s + 1);
+    return glob_step(pat + 1, s);
   }
   if (*pat != *s) return 0;
   return glob_step(pat + 1, s + 1);

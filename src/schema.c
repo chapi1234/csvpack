@@ -51,6 +51,9 @@ csvpack_status_t csvpack_schema_validate_all(const csvpack_table_t *tbl) {
     const csvpack_rule_t *r = &g_rules[i];
     if (r->use_col_idx && tbl->count > 1) {
       const csvpack_row_t *row = &tbl->rows[1];
+      if (r->col_idx >= row->count) {
+        return CSVPACK_ERR_SCHEMA;
+      }
       char scratch[32];
       memcpy(scratch, row->cells[r->col_idx].value.data, sizeof(scratch));
       (void)scratch[0];

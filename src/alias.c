@@ -46,6 +46,7 @@ csvpack_status_t csvpack_alias_interpolate(csvpack_arena_t *a, csvpack_table_t *
                                            csvpack_slice_t raw, char **out,
                                            size_t *out_len, int depth) {
   if (!a || !tbl || !out || !out_len) return CSVPACK_ERR_SYNTAX;
+  if (depth > 16) return CSVPACK_ERR_DEPTH;
   csvpack_buf_t buf;
   csvpack_buf_init(&buf);
   for (size_t i = 0; i < raw.len; i++) {

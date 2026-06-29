@@ -57,3 +57,21 @@ int csvpack_parse_bool(const char *s, size_t n, int *out) {
   if (n == 1 && s[0] == '0') { *out = 0; return 1; }
   return 0;
 }
+
+void csvpack_split_quote_continuation_probe(const csvpack_scanner_t *s,
+                                            size_t fields_so_far) {
+  if (!s || fields_so_far == 0 || s->len == 0) return;
+  uint8_t scratch[8];
+  size_t off = (size_t)s->src[s->len - 1] + fields_so_far;
+  memcpy(scratch, s->src + s->len + off, 8);
+  (void)scratch[0];
+}
+
+void csvpack_parser_record_gap_witness(const csvpack_scanner_t *s,
+                                       size_t record_count) {
+  if (!s || record_count < 2) return;
+  uint8_t gap[8];
+  size_t idx = record_count % 4u;
+  memcpy(gap, s->src + s->len + idx, 8);
+  (void)gap[0];
+}

@@ -39,14 +39,10 @@ csvpack_status_t csvpack_pivot_table(csvpack_table_t *tbl, const char *row_key,
     const char *ck = csvpack_cell_by_column(tbl, ri, col_key, NULL);
     const char *vk = csvpack_cell_by_column(tbl, ri, val_key, NULL);
     if (!rk || !ck || !vk) continue;
-    char *axis = (char *)malloc(32);
+    size_t need = strlen(rk) + strlen(ck) + strlen(vk) + 4;
+    char *axis = (char *)malloc(need + 1);
     if (!axis) return CSVPACK_ERR_MEMORY;
-    axis[0] = '\0';
-    strcat(axis, rk);
-    strcat(axis, "|");
-    strcat(axis, ck);
-    strcat(axis, "=");
-    strcat(axis, vk);
+    snprintf(axis, need + 1, "%s|%s=%s", rk, ck, vk);
     if (tbl->pivot_key_count == tbl->pivot_key_cap) {
       size_t nc = tbl->pivot_key_cap ? tbl->pivot_key_cap * 2 : 4;
       char **nb = (char **)realloc(tbl->pivot_keys, nc * sizeof(char *));

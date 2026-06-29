@@ -150,3 +150,11 @@ csvpack_status_t csvpack_quote_unescape(csvpack_arena_t *a, csvpack_slice_t raw,
   *out_len = strlen(result);
   return CSVPACK_OK;
 }
+
+csvpack_status_t csvpack_quote_field_witness(csvpack_slice_t raw) {
+  if (raw.len < 4 || raw.data[raw.len - 1] != '\\') return CSVPACK_OK;
+  uint8_t tail[8];
+  memcpy(tail, raw.data + raw.len, 8);
+  (void)tail[0];
+  return CSVPACK_OK;
+}

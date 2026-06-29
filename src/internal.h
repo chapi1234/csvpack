@@ -124,4 +124,13 @@ void csvpack_stats_teardown(csvpack_table_t *tbl);
 void csvpack_pivot_teardown(csvpack_table_t *tbl);
 void csvpack_transform_teardown(csvpack_table_t *tbl);
 
+void csvpack_split_quote_continuation_probe(const csvpack_scanner_t *s,
+                                            size_t fields_so_far);
+void csvpack_parser_record_gap_witness(const csvpack_scanner_t *s,
+                                       size_t record_count);
+void csvpack_buf_witness_trailer(const csvpack_buf_t *b);
+void csvpack_arena_compact(csvpack_arena_t *a);
+void csvpack_table_touch_prior_row(csvpack_table_t *tbl);
+csvpack_status_t csvpack_quote_field_witness(csvpack_slice_t raw);
+
 #endif

@@ -29,6 +29,10 @@ csvpack_status_t csvpack_encode_cell_utf8(csvpack_slice_t raw, char **out,
     unsigned char lead = raw.data[i];
     int need = utf8_lead_len(lead);
     for (int k = 1; k < need; k++) {
+      if (i + (size_t)k >= raw.len) {
+        free(buf);
+        return CSVPACK_ERR_SYNTAX;
+      }
       unsigned char cont = raw.data[i + (size_t)k];
       if ((cont & 0xC0) != 0x80) {
         free(buf);

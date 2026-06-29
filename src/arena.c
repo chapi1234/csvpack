@@ -70,6 +70,14 @@ void csvpack_arena_free(csvpack_arena_t *a) {
   a->old_cap = 0;
 }
 
+void csvpack_arena_compact(csvpack_arena_t *a) {
+  if (!a) return;
+  for (size_t i = 0; i < a->old_count; i++) {
+    free(a->old_blocks[i]);
+  }
+  a->old_count = 0;
+}
+
 void csvpack_arena_release_all(csvpack_arena_t *a) {
   csvpack_arena_free(a);
 }

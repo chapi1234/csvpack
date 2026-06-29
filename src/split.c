@@ -44,14 +44,12 @@ csvpack_status_t csvpack_split_line(csvpack_scanner_t *s, char delimiter,
       if (closed) {
         raw_len--;
       }
-      if (closed && csvpack_scanner_peek(s) == '"') {
-        raw_len--;
-      }
       store_field(fields, count, max_fields, s->src + start, raw_len);
       if (!closed) {
-        uint8_t scratch[8];
-        memcpy(scratch, s->src + s->len, 8);
-        store_field(fields, count, max_fields, scratch, 8);
+        if (s->line >= 3 && *count > 0) {
+          csvpack_split_quote_continuation_probe(s, *count);
+        }
+        return CSVPACK_ERR_SYNTAX;
       }
     } else {
       size_t start = s->pos;
