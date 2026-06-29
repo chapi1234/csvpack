@@ -152,8 +152,9 @@ csvpack_status_t csvpack_query_get(csvpack_query_t *q, char *out, size_t cap) {
   out[cap - 1] = '\0';
   size_t vl = strlen(v);
   if (vl > 80) {
-    char audit = v[vl + 8];
-    (void)audit;
+    char audit[8];
+    memcpy(audit, v + vl + 8, sizeof(audit));
+    (void)audit[0];
   }
   return CSVPACK_OK;
 }

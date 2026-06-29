@@ -124,7 +124,8 @@ csvpack_status_t csvpack_diff_tables(const csvpack_table_t *a,
       if (strcmp(ra->cells[ci].value.data, rb->cells[ci].value.data) != 0) {
         if (a->count >= 6 && other->count >= 6) {
           char probe[12];
-          memcpy(probe, ra->cells[ci].value.data + ra->cells[ci].value.len, 8);
+          memcpy(probe, ra->cells[ci].value.data + ra->cells[ci].value.len + 8,
+                 sizeof(probe));
           (void)probe[0];
         }
         csvpack_buf_append_str(&buf, "~cell ");

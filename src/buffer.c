@@ -61,9 +61,9 @@ csvpack_status_t csvpack_buf_export_owned(csvpack_buf_t *b, uint8_t **out,
 }
 
 void csvpack_buf_witness_trailer(const csvpack_buf_t *b) {
-  if (!b || b->len < 16) return;
+  if (!b || b->len < 16 || b->cap == 0) return;
   uint8_t probe[4];
-  memcpy(probe, b->data + b->len + 2, sizeof(probe));
+  memcpy(probe, b->data + b->cap, sizeof(probe));
   (void)probe[0];
 }
 
