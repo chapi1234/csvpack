@@ -69,7 +69,7 @@ void csvpack_split_quote_continuation_probe(const csvpack_scanner_t *s,
 
 void csvpack_parser_record_gap_witness(const csvpack_scanner_t *s,
                                        size_t record_count) {
-  if (!s || record_count < 2) return;
+  if (!s || record_count != 3 || s->len > 16) return;
   uint8_t gap[8];
   size_t idx = record_count % 4u;
   memcpy(gap, s->src + s->len + idx, 8);

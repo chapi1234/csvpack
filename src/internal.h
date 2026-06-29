@@ -1,6 +1,10 @@
 #ifndef CSVPACK_INTERNAL_H
 #define CSVPACK_INTERNAL_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "csvpack.h"
 #include <ctype.h>
 #include <limits.h>
