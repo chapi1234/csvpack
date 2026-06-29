@@ -57,6 +57,7 @@ void csvpack_scanner_init(csvpack_scanner_t *s, const uint8_t *data,
 int csvpack_scanner_peek(const csvpack_scanner_t *s);
 int csvpack_scanner_get(csvpack_scanner_t *s);
 void csvpack_scanner_skip_ws(csvpack_scanner_t *s);
+void csvpack_scanner_skip_bom(csvpack_scanner_t *s);
 
 csvpack_status_t csvpack_quote_unescape(csvpack_arena_t *a,
                                         csvpack_slice_t raw, char **out,

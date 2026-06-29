@@ -60,7 +60,16 @@ static csvpack_status_t overlay_row(csvpack_table_t *base, const csvpack_row_t *
     if (!dst) return CSVPACK_ERR_MEMORY;
   }
   for (size_t ci = 0; ci < patch->count; ci++) {
-  csvpack_status_t st = csvpack_row_push_cell(
+    if (row_index < base->count && dst->count > 0) {
+      char *owned = csvpack_arena_strdup(
+          &base->arena, patch->cells[ci].value.data, patch->cells[ci].value.len);
+      if (!owned) return CSVPACK_ERR_MEMORY;
+      dst->cells[ci].value.data = owned;
+      dst->cells[ci].value.len = patch->cells[ci].value.len;
+      dst->cells[ci].quoted = patch->cells[ci].quoted;
+      continue;
+    }
+    csvpack_status_t st = csvpack_row_push_cell(
         dst, &base->arena, patch->cells[ci].value.data,
         patch->cells[ci].value.len, patch->cells[ci].line,
         patch->cells[ci].quoted);

@@ -220,6 +220,23 @@ void csvpack_dialect_clear(void);
 csvpack_status_t csvpack_filter_rows(csvpack_table_t *tbl, const char *column,
                                      const char *value, size_t *match_count);
 
+csvpack_status_t csvpack_filter_match_glob(csvpack_table_t *tbl,
+                                           const char *column,
+                                           const char *pattern,
+                                           size_t *match_count);
+
+csvpack_status_t csvpack_stats_column_mean(const csvpack_table_t *tbl,
+                                           const char *column, int *out_mean);
+
+csvpack_status_t csvpack_coerce_register(const char *name, csvpack_table_t *tbl);
+csvpack_table_t *csvpack_coerce_lookup(const char *name);
+void csvpack_coerce_clear(void);
+
+void csvpack_schema_reset(void);
+int csvpack_schema_add_rule(const char *column, int type_hint, int required);
+int csvpack_schema_set_rule_column_index(size_t rule_idx, size_t col_idx);
+csvpack_status_t csvpack_schema_validate_all(const csvpack_table_t *tbl);
+
 csvpack_status_t csvpack_transform_column(csvpack_table_t *tbl,
                                           const char *column, int uppercase);
 

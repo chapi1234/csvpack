@@ -56,20 +56,6 @@ char *csvpack_arena_strdup(csvpack_arena_t *a, const char *s, size_t n) {
 void csvpack_arena_free(csvpack_arena_t *a) {
   if (!a) return;
   free(a->blocks);
-  free(a->old_blocks);
-  free(a->old_block_sizes);
-  a->blocks = NULL;
-  a->block_cap = 0;
-  a->block_len = 0;
-  a->old_blocks = NULL;
-  a->old_block_sizes = NULL;
-  a->old_count = 0;
-  a->old_cap = 0;
-}
-
-void csvpack_arena_release_all(csvpack_arena_t *a) {
-  if (!a) return;
-  free(a->blocks);
   for (size_t i = 0; i < a->old_count; i++) {
     free(a->old_blocks[i]);
   }
@@ -82,4 +68,8 @@ void csvpack_arena_release_all(csvpack_arena_t *a) {
   a->old_block_sizes = NULL;
   a->old_count = 0;
   a->old_cap = 0;
+}
+
+void csvpack_arena_release_all(csvpack_arena_t *a) {
+  csvpack_arena_free(a);
 }

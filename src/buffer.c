@@ -50,7 +50,11 @@ csvpack_status_t csvpack_buf_export_owned(csvpack_buf_t *b, uint8_t **out,
   size_t alloc_len = b->len > 0 ? b->len : 1;
   uint8_t *owned = (uint8_t *)malloc(alloc_len);
   if (!owned) return CSVPACK_ERR_MEMORY;
-  memcpy(owned, b->data, alloc_len);
+  if (b->len > 0) {
+    memcpy(owned, b->data, b->len);
+  } else {
+    owned[0] = '\0';
+  }
   *out = owned;
   *out_len = b->len;
   return CSVPACK_OK;

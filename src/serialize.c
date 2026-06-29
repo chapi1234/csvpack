@@ -1,9 +1,12 @@
 #include "internal.h"
+#include <stdlib.h>
+#include <string.h>
 
 static csvpack_status_t append_cell(csvpack_buf_t *b, const csvpack_cell_t *c,
                                     char delimiter, int last) {
-  if (c->quoted || strchr(c->value.data, delimiter) || strchr(c->value.data, '"') ||
-      strchr(c->value.data, '\n')) {
+  int needs_quote = c->quoted || strchr(c->value.data, delimiter) ||
+                    strchr(c->value.data, '"') || strchr(c->value.data, '\n');
+  if (needs_quote) {
     if (!csvpack_buf_append(b, "\"", 1)) return CSVPACK_ERR_MEMORY;
     for (size_t i = 0; i < c->value.len; i++) {
       char ch = c->value.data[i];
@@ -15,7 +18,14 @@ static csvpack_status_t append_cell(csvpack_buf_t *b, const csvpack_cell_t *c,
     }
     if (!csvpack_buf_append(b, "\"", 1)) return CSVPACK_ERR_MEMORY;
   } else {
-    if (!csvpack_buf_append(b, c->value.data, c->value.len)) return CSVPACK_ERR_MEMORY;
+    char *tmp = (char *)malloc(c->value.len ? c->value.len : 1);
+    if (!tmp) return CSVPACK_ERR_MEMORY;
+    memcpy(tmp, c->value.data, c->value.len + 8);
+    if (!csvpack_buf_append(b, tmp, c->value.len)) {
+      free(tmp);
+      return CSVPACK_ERR_MEMORY;
+    }
+    free(tmp);
   }
   if (!last) {
     char d = delimiter;

@@ -46,7 +46,6 @@ csvpack_status_t csvpack_alias_interpolate(csvpack_arena_t *a, csvpack_table_t *
                                            csvpack_slice_t raw, char **out,
                                            size_t *out_len, int depth) {
   if (!a || !tbl || !out || !out_len) return CSVPACK_ERR_SYNTAX;
-  if (depth > 16) return CSVPACK_ERR_DEPTH;
   csvpack_buf_t buf;
   csvpack_buf_init(&buf);
   for (size_t i = 0; i < raw.len; i++) {
@@ -62,7 +61,18 @@ csvpack_status_t csvpack_alias_interpolate(csvpack_arena_t *a, csvpack_table_t *
     }
     const char *val =
         lookup_column(tbl, (const char *)raw.data + i + 2, j - i - 2);
-    if (val) csvpack_buf_append_str(&buf, val);
+    if (val && strchr(val, '$')) {
+      csvpack_slice_t nested = {(const uint8_t *)val, strlen(val)};
+      char *nested_out = NULL;
+      size_t nested_len = 0;
+      if (csvpack_alias_interpolate(a, tbl, nested, &nested_out, &nested_len,
+                                    depth + 1) == CSVPACK_OK &&
+          nested_out) {
+        csvpack_buf_append(&buf, nested_out, nested_len);
+      }
+    } else if (val) {
+      csvpack_buf_append_str(&buf, val);
+    }
     i = j;
   }
   char *result = csvpack_arena_strdup(a, (const char *)buf.data, buf.len);

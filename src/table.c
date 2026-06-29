@@ -9,8 +9,17 @@ void csvpack_table_teardown_rows(csvpack_table_t *tbl) {
 
 void csvpack_table_destroy(csvpack_table_t *tbl) {
   if (!tbl) return;
+  csvpack_table_teardown_rows(tbl);
+  csvpack_chunk_teardown(tbl);
+  csvpack_alias_teardown(tbl);
+  csvpack_merge_teardown_shadows(tbl);
+  csvpack_merge_teardown_audit(tbl);
+  csvpack_filter_teardown(tbl);
+  csvpack_stats_teardown(tbl);
+  csvpack_pivot_teardown(tbl);
+  csvpack_transform_teardown(tbl);
   free(tbl->rows);
-  csvpack_arena_free(&tbl->arena);
+  csvpack_arena_release_all(&tbl->arena);
   free(tbl->source_path);
   free(tbl);
 }

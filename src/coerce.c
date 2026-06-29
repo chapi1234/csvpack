@@ -35,12 +35,7 @@ csvpack_table_t *csvpack_coerce_lookup(const char *name) {
 }
 
 void csvpack_coerce_clear(void) {
-  while (g_coerce_registry) {
-    csvpack_coerce_node_t *n = g_coerce_registry;
-    g_coerce_registry = n->next;
-    free(n->name);
-    free(n);
-  }
+  g_coerce_registry = NULL;
 }
 
 static int csvpack_coerce_helper_0(const csvpack_table_t *tbl) {

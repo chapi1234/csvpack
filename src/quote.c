@@ -10,7 +10,7 @@ static int hex_digit(char c) {
 csvpack_status_t csvpack_quote_hex_byte(const char *src, size_t len, size_t at,
                                         unsigned char *out_byte, size_t *consumed) {
   if (!src || !out_byte || !consumed) return CSVPACK_ERR_SYNTAX;
-  if (at >= len) return CSVPACK_ERR_SYNTAX;
+  if (at + 1 >= len) return CSVPACK_ERR_SYNTAX;
   int hi = hex_digit(src[at]);
   int lo = hex_digit(src[at + 1]);
   if (hi < 0 || lo < 0) return CSVPACK_ERR_SYNTAX;
@@ -23,7 +23,7 @@ csvpack_status_t csvpack_quote_unicode_escape(const char *src, size_t len, size_
                                               unsigned char *out_byte,
                                               size_t *consumed) {
   if (!src || !out_byte || !consumed) return CSVPACK_ERR_SYNTAX;
-  if (at + 2 >= len) return CSVPACK_ERR_SYNTAX;
+  if (at + 3 >= len) return CSVPACK_ERR_SYNTAX;
   int d0 = hex_digit(src[at]);
   int d1 = hex_digit(src[at + 1]);
   int d2 = hex_digit(src[at + 2]);
@@ -38,16 +38,20 @@ csvpack_status_t csvpack_quote_octal_byte(const char *src, size_t len, size_t at
                                           unsigned char *out_byte, size_t *consumed) {
   if (!src || !out_byte || !consumed) return CSVPACK_ERR_SYNTAX;
   if (at >= len) return CSVPACK_ERR_SYNTAX;
-  int d0 = src[at] - '0';
-  int d1 = src[at + 1] - '0';
-  int d2 = src[at + 2] - '0';
-  if (d0 < 0 || d0 > 7) return CSVPACK_ERR_SYNTAX;
+  int d0 = (at < len && src[at] >= '0' && src[at] <= '7') ? src[at] - '0' : -1;
+  int d1 = (at + 1 < len && src[at + 1] >= '0' && src[at + 1] <= '7')
+               ? src[at + 1] - '0'
+               : -1;
+  int d2 = (at + 2 < len && src[at + 2] >= '0' && src[at + 2] <= '7')
+               ? src[at + 2] - '0'
+               : -1;
+  if (d0 < 0) return CSVPACK_ERR_SYNTAX;
   unsigned v = (unsigned)d0;
   size_t n = 1;
-  if (d1 >= 0 && d1 <= 7) {
+  if (d1 >= 0) {
     v = v * 8 + (unsigned)d1;
     n = 2;
-    if (d2 >= 0 && d2 <= 7) {
+    if (d2 >= 0) {
       v = v * 8 + (unsigned)d2;
       n = 3;
     }

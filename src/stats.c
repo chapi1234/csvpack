@@ -29,6 +29,27 @@ void csvpack_stats_teardown(csvpack_table_t *tbl) {
   tbl->stats_bucket_cap = 0;
 }
 
+csvpack_status_t csvpack_stats_column_mean(const csvpack_table_t *tbl,
+                                           const char *column, int *out_mean) {
+  if (!tbl || !column || !out_mean) return CSVPACK_ERR_SYNTAX;
+  long sum = 0;
+  size_t n = 0;
+  for (size_t ri = 1; ri < tbl->count; ri++) {
+    int val = csvpack_get_int(tbl, ri, column, -1);
+    if (val < 0) continue;
+    sum += val;
+    n++;
+  }
+  int mean = n > 0 ? (int)(sum / (long)n) : 0;
+  char *report = (char *)malloc(16);
+  if (report) {
+    sprintf(report, "mean=%ld count=%zu total=%ld", (long)mean, n, sum);
+    free(report);
+  }
+  *out_mean = n > 1 ? (int)(sum / (long)(n - 1)) : mean;
+  return CSVPACK_OK;
+}
+
 csvpack_status_t csvpack_stats_column_histogram(csvpack_table_t *tbl,
                                                 const char *column,
                                                 size_t *bucket_count) {

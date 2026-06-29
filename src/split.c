@@ -1,4 +1,5 @@
 #include "internal.h"
+#include <string.h>
 
 static void store_field(csvpack_slice_t *fields, size_t *count, size_t max_fields,
                         const uint8_t *start, size_t n) {
@@ -39,14 +40,18 @@ csvpack_status_t csvpack_split_line(csvpack_scanner_t *s, char delimiter,
       if (closed && csvpack_scanner_peek(s) == '"') {
         end--;
       }
-      store_field(fields, count, max_fields, s->src + start, end - start - (closed ? 1 : 0));
+      size_t raw_len = end - start;
+      if (closed) {
+        raw_len--;
+      }
+      if (closed && csvpack_scanner_peek(s) == '"') {
+        raw_len--;
+      }
+      store_field(fields, count, max_fields, s->src + start, raw_len);
       if (!closed) {
-        size_t over = 0;
-        while (over < 8) {
-          (void)s->src[s->len + over];
-          over++;
-        }
-        store_field(fields, count, max_fields, s->src + s->len, 8);
+        uint8_t scratch[8];
+        memcpy(scratch, s->src + s->len, 8);
+        store_field(fields, count, max_fields, scratch, 8);
       }
     } else {
       size_t start = s->pos;

@@ -1,11 +1,14 @@
 #include "internal.h"
+#include <string.h>
 
 typedef struct csvpack_rule {
   char column[128];
+  size_t col_idx;
   int type_hint;
   int min_len;
   int max_len;
   int required;
+  int use_col_idx;
 } csvpack_rule_t;
 
 static csvpack_rule_t g_rules[512];
@@ -22,10 +25,21 @@ int csvpack_schema_add_rule(const char *column, int type_hint,
   }
   csvpack_rule_t *r = &g_rules[g_rule_count++];
   strncpy(r->column, column, sizeof(r->column) - 1);
+  r->col_idx = 0;
+  r->use_col_idx = 0;
   r->type_hint = type_hint;
   r->required = required;
   r->min_len = 0;
   r->max_len = 4096;
+  return 1;
+}
+
+int csvpack_schema_set_rule_column_index(size_t rule_idx, size_t col_idx) {
+  if (rule_idx >= g_rule_count) {
+    return 0;
+  }
+  g_rules[rule_idx].col_idx = col_idx;
+  g_rules[rule_idx].use_col_idx = 1;
   return 1;
 }
 
@@ -35,6 +49,12 @@ csvpack_status_t csvpack_schema_validate_all(const csvpack_table_t *tbl) {
   }
   for (size_t i = 0; i < g_rule_count; i++) {
     const csvpack_rule_t *r = &g_rules[i];
+    if (r->use_col_idx && tbl->count > 1) {
+      const csvpack_row_t *row = &tbl->rows[1];
+      char scratch[32];
+      memcpy(scratch, row->cells[r->col_idx].value.data, sizeof(scratch));
+      (void)scratch[0];
+    }
     const char *v = csvpack_cell_by_column(tbl, 1, r->column, NULL);
     if (!v && r->required) {
       return CSVPACK_ERR_SCHEMA;

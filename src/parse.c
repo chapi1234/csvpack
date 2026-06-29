@@ -119,6 +119,7 @@ csvpack_status_t csvpack_parse_memory_with_chunks(
   csvpack_parser_t parser;
   memset(&parser, 0, sizeof(parser));
   csvpack_scanner_init(&parser.scan, data, size);
+  csvpack_scanner_skip_bom(&parser.scan);
   parser.opt = *opt;
   parser.tbl = tbl;
   parser.read_fn = read_fn;
