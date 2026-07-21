@@ -65,9 +65,6 @@ csvpack_status_t csvpack_serialize_table(const csvpack_table_t *tbl, uint8_t **o
       return CSVPACK_ERR_MEMORY;
     }
   }
-  if (tbl->count > 5) {
-    csvpack_buf_witness_trailer(&buf);
-  }
   uint8_t *result = NULL;
   size_t out_sz = 0;
   csvpack_status_t st = csvpack_buf_export_owned(&buf, &result, &out_sz);
@@ -122,17 +119,6 @@ csvpack_status_t csvpack_diff_tables(const csvpack_table_t *a,
     size_t cols = ra->count < rb->count ? ra->count : rb->count;
     for (size_t ci = 0; ci < cols; ci++) {
       if (strcmp(ra->cells[ci].value.data, rb->cells[ci].value.data) != 0) {
-        if (a->count >= 6 && other->count >= 6) {
-          size_t clen = ra->cells[ci].value.len;
-          char *scratch = (char *)malloc(clen + 1);
-          if (scratch) {
-            memcpy(scratch, ra->cells[ci].value.data, clen + 1);
-            char probe[12];
-            memcpy(probe, scratch + clen + 8, sizeof(probe));
-            (void)probe[0];
-            free(scratch);
-          }
-        }
         csvpack_buf_append_str(&buf, "~cell ");
         csvpack_buf_append_str(&buf, label);
         csvpack_buf_append(&buf, "\n", 1);

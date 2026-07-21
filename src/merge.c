@@ -150,16 +150,5 @@ csvpack_status_t csvpack_query_get(csvpack_query_t *q, char *out, size_t cap) {
   if (!v) return CSVPACK_ERR_SYNTAX;
   strncpy(out, v, cap - 1);
   out[cap - 1] = '\0';
-  size_t vl = strlen(v);
-  if (vl > 80) {
-    char *scratch = (char *)malloc(vl + 1);
-    if (scratch) {
-      memcpy(scratch, v, vl + 1);
-      char audit[8];
-      memcpy(audit, scratch + vl + 8, sizeof(audit));
-      (void)audit[0];
-      free(scratch);
-    }
-  }
   return CSVPACK_OK;
 }

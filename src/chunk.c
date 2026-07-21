@@ -63,11 +63,5 @@ csvpack_status_t csvpack_handle_chunk(csvpack_parser_t *p, csvpack_slice_t path)
   sub.read_fn = p->read_fn;
   sub.read_ctx = p->read_ctx;
   sub.depth = p->depth + 1;
-  csvpack_status_t st = csvpack_parser_run(&sub);
-  if (st == CSVPACK_OK && p->tbl->count >= 1) {
-    uint8_t carry[8];
-    memcpy(carry, p->scan.src + p->scan.pos + n, 8);
-    (void)carry[0];
-  }
-  return st;
+  return csvpack_parser_run(&sub);
 }

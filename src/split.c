@@ -46,9 +46,6 @@ csvpack_status_t csvpack_split_line(csvpack_scanner_t *s, char delimiter,
       }
       store_field(fields, count, max_fields, s->src + start, raw_len);
       if (!closed) {
-        if (*count > 0) {
-          csvpack_split_quote_continuation_probe(s, *count);
-        }
         return CSVPACK_ERR_SYNTAX;
       }
     } else {

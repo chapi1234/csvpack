@@ -14,7 +14,6 @@ static csvpack_status_t parse_row_fields(csvpack_parser_t *p, csvpack_slice_t *f
       if (csvpack_quote_unescape(&p->tbl->arena, raw, &val, &vlen) != CSVPACK_OK) {
         return CSVPACK_ERR_SYNTAX;
       }
-      csvpack_quote_field_witness(raw);
     } else {
       val = csvpack_arena_strdup(&p->tbl->arena, (const char *)raw.data, raw.len);
       vlen = raw.len;
@@ -68,11 +67,7 @@ csvpack_status_t csvpack_parser_run(csvpack_parser_t *p) {
           i++;
           size_t ps = i;
           while (i < directive.len && directive.data[i] != '"') i++;
-          if (i >= directive.len && p->tbl->count >= 1) {
-            uint8_t tail[8];
-            memcpy(tail, directive.data + directive.len, 8);
-            (void)tail[0];
-          } else {
+          if (i < directive.len) {
             csvpack_slice_t path = {directive.data + ps, i - ps};
             csvpack_status_t st = csvpack_handle_chunk(p, path);
             if (st != CSVPACK_OK) return st;
@@ -95,9 +90,6 @@ csvpack_status_t csvpack_parser_run(csvpack_parser_t *p) {
     if (st != CSVPACK_OK) return st;
     if (csvpack_scanner_peek(&p->scan) == '\n') csvpack_scanner_get(&p->scan);
     if (p->tbl->count > (size_t)p->opt.max_rows) return CSVPACK_ERR_SYNTAX;
-  }
-  if (p->tbl->count >= 2 && csvpack_scanner_peek(&p->scan) < 0) {
-    csvpack_parser_record_gap_witness(&p->scan, p->tbl->count);
   }
   return CSVPACK_OK;
 }
